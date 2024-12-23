@@ -152,7 +152,7 @@ const contractErc1155 = getContract({
 export default function AIPage({ params }: any) {
 
 
-    console.log("SettingsPage params", params);
+    //console.log("SettingsPage params", params);
     
     
     // get params from the URL
@@ -398,8 +398,8 @@ export default function AIPage({ params }: any) {
             let agentTokenId = agentNumber as string || "";
 
 
-            console.log("agentContractAddress", agentContractAddress);
-            console.log("agentTokenId", agentTokenId);
+            //console.log("agentContractAddress", agentContractAddress);
+            //console.log("agentTokenId", agentTokenId);
 
             // 0x50985B6974bFE7bFCCE313dfB59abd58EF4310fA 0 default
             /*
@@ -425,6 +425,10 @@ export default function AIPage({ params }: any) {
                 }),
             });
 
+            //console.log("fetchAgentUserInfo", fetchAgentUserInfo);
+
+
+
             if (!fetchAgentUserInfo.ok) {
                 console.error("Error fetching agent");
                 setIsValidReferralLoading(false);
@@ -434,12 +438,15 @@ export default function AIPage({ params }: any) {
 
             const agentUserInfo = await fetchAgentUserInfo.json();
 
+            //console.log("agentUserInfo", agentUserInfo);
+
+
             if (!agentUserInfo.result) {
                 setIsValidReferralLoading(false);
                 return;
             }
 
-            console.log("agentUserInfo", agentUserInfo);
+            //console.log("agentUserInfo", agentUserInfo);
 
             setReferralUserInfo(agentUserInfo.result);
 
@@ -465,10 +472,15 @@ export default function AIPage({ params }: any) {
 
             const nftData = await fetchedNFT.json();
 
-            console.log("nftData.result.mint.transactionHash", nftData.result?.mint?.transactionHash);
+            //console.log("nftData", nftData);
+
+            //console.log("nftData.result.mint.transactionHash", nftData.result?.mint?.transactionHash);
 
 
-            if (nftData.result?.mint?.transactionHash) {
+            //if (nftData.result?.mint?.transactionHash) {
+            if (nftData.result) {
+
+
 
                 setIsValidReferral(true);
 
@@ -488,8 +500,8 @@ export default function AIPage({ params }: any) {
 
     } , [agent, agentNumber]);
 
-    console.log("isValidReferralLoading", isValidReferralLoading);
-    console.log("isValidReferral", isValidReferral);
+    //console.log("isValidReferralLoading", isValidReferralLoading);
+    //console.log("isValidReferral", isValidReferral);
 
     
 
@@ -739,7 +751,7 @@ export default function AIPage({ params }: any) {
     const [masterBot, setMasterBot] = useState({} as any);
 
 
-    console.log("address", address);
+    ////console.log("address", address);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -784,8 +796,8 @@ export default function AIPage({ params }: any) {
 
 
 
-    console.log("nickname", nickname);
-    console.log("userCode", userCode);
+    //console.log("nickname", nickname);
+    //console.log("userCode", userCode);
 
 
   
@@ -891,7 +903,7 @@ export default function AIPage({ params }: any) {
                     transaction: transaction,
                 });
 
-                console.log("result", result);
+                //console.log("result", result);
 
                 toast.success(Alert_NFT_minted);
 
@@ -965,8 +977,8 @@ export default function AIPage({ params }: any) {
 
 
 
-    console.log("address", address);
-    console.log("agent", agent);
+    //console.log("address", address);
+    //console.log("agent", agent);
     
 
 
@@ -1074,7 +1086,9 @@ export default function AIPage({ params }: any) {
 
     const [userEmail, setUserEmail] = useState("");
     
-    const [htxUserId, setHtxUserId] = useState("");
+    ///const [htxUserId, setHtxUserId] = useState("");
+
+    const [okxUid, setOkxUid] = useState("");
 
     const [htxUsdtWalletAddress, setHtxUsdtWalletAddress] = useState("");
     const [apiAccessKey, setApiAccessKey] = useState("");
@@ -1116,8 +1130,8 @@ export default function AIPage({ params }: any) {
             return;
         }
 
-        if (htxUserId === "") {
-            toast.error("OKX UserId 입력해 주세요.");
+        if (okxUid === "") {
+            toast.error("OKX UID 입력해 주세요.");
             return;
         }
 
@@ -1148,14 +1162,10 @@ export default function AIPage({ params }: any) {
 
         // api call
 
-        let marketingCenter = "owin";
-        // if center is 5 characters
-        if (center === "exms_orry_bot"
-            || center === "exms_koko_bot"
-            || center === "exms_joajoa_bot"
-            || center === "exms_bigrich_bot"
-            || center === "exms_5515_bot"
-        ) {
+        let marketingCenter = "exms";
+    
+        // if center is 4 characters
+        if (center?.slice(0, 4) === "exms") {
             marketingCenter = "exms";
         }
 
@@ -1175,7 +1185,7 @@ export default function AIPage({ params }: any) {
                 userTelegramId: userTelegramId,
                 userEmail: userEmail,
                 exchange: "okx",
-                htxUserId: htxUserId,
+                okxUid: okxUid,
                 htxUsdtWalletAddress: htxUsdtWalletAddress,
                 apiAccessKey: apiAccessKey,
                 apiSecretKey: apiSecretKey,
@@ -1191,7 +1201,6 @@ export default function AIPage({ params }: any) {
 
         const data = await response.json();
 
-        //console.log("data", data);
 
         if (data.result) {
             setApplyingMintNFT(false);
@@ -1258,7 +1267,9 @@ export default function AIPage({ params }: any) {
 
             const data = await response.json();
 
-            //////console.log("getMyAgent data=========", data);
+            //console.log("getMyAgent data=========", data);
+
+
 
             if (data.result) {
 
@@ -1411,7 +1422,7 @@ export default function AIPage({ params }: any) {
     } , [agentNumber]);
 
 
-    console.log("selectedBotNumber", selectedBotNumber);
+    ///console.log("selectedBotNumber", selectedBotNumber);
 
 
 
@@ -1421,38 +1432,45 @@ export default function AIPage({ params }: any) {
 
     // check htx api key
     const [checkingHtxApiKey, setCheckingHtxApiKey] = useState(false);
-    const checkHtxApiKey = async (
-        htxAccessKey: string,
-        htxSecretKey: string,
+    const checkOkxApiKey = async (
+        apiAccessKey: string,
+        apiSecretKey: string,
+        apiPassword: string,
     ) => {
 
        
-        if (htxAccessKey === "") {
+        if (apiAccessKey === "") {
             toast.error("OKX Access Key를 입력해 주세요.");
             return;
         }
 
-        if (htxSecretKey === "") {
+        if (apiSecretKey === "") {
             toast.error("OKX Secret Key를 입력해 주세요.");
+            return;
+        }
+
+        if (apiPassword === "") {
+            toast.error("OKX Password를 입력해 주세요.");
             return;
         }
 
         setCheckingHtxApiKey(true);
 
-        const response = await fetch("/api/agent/getAccountOkx", {
+        const response = await fetch("/api/okx/checkUID", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                htxAccessKey: htxAccessKey,
-                htxSecretKey: htxSecretKey,
+                apiAccessKey: apiAccessKey,
+                apiSecretKey: apiSecretKey,
+                apiPassword: apiPassword,
             }),
         });
         /*
         {
             status: 'ok',
-            data: [ { id: 63912897, type: 'spot', subtype: '', state: 'working' } ]
+            okxUid: '1234',
         }
         */
 
@@ -1464,9 +1482,7 @@ export default function AIPage({ params }: any) {
 
             setIsValidAPIKey(true);
 
-            
-            //setHtxUserId(data.result?.data[0]?.id);
-            setHtxUserId("1234");
+            setOkxUid(data.result?.okxUid);
 
 
             toast.success("OKX API Key가 확인되었습니다.");
@@ -1477,6 +1493,7 @@ export default function AIPage({ params }: any) {
         setCheckingHtxApiKey(false);
 
     };
+
 
 
 
@@ -1579,7 +1596,7 @@ export default function AIPage({ params }: any) {
 
         const data = await response.json();
 
-        console.log("data.result", data.result);
+        //console.log("data.result", data.result);
 
         if (data.result?.status === "ok") {
             toast.success("OKX 선물 계정으로 이체되었습니다.");
@@ -1594,54 +1611,89 @@ export default function AIPage({ params }: any) {
 
 
 
-    // check htx asset valuation
-    const [checkingHtxAssetValuation, setCheckingHtxAssetValuation] = useState(false);
+    // check trading account balance
+    //const [tradingAccountBalance, setTradingAccountBalance] = useState({} as any);
+
+    const [checkingTradingAccountBalance, SetCheckingTradingAccountBalance] = useState(false);
 
 
-    const checkHtxAssetValuation = async (
-        htxAccessKey: string,
-        htxSecretKey: string,
+    const checkTradingAccountBalance = async (
+        applicationId: string,
+        apiAccessKey: string,
+        apiSecretKey: string,
+        apiPassword: string,
+
     ) => {
 
-        if (htxAccessKey === "") {
+        if (apiAccessKey === "") {
             toast.error("OKX Access Key를 입력해 주세요.");
             return;
         }
 
-        if (htxSecretKey === "") {
+        if (apiSecretKey === "") {
             toast.error("OKX Secret Key를 입력해 주세요.");
             return;
         }
 
-        setCheckingHtxAssetValuation(true);
+        if (apiPassword === "") {
+            toast.error("OKX Password를 입력해 주세요.");
+            return;
+        }
 
-        const response = await fetch("/api/agent/getAssetValuation", {
+        SetCheckingTradingAccountBalance(true);
+
+        const response = await fetch("/api/okx/getTradingAccountBalance", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                htxAccessKey: htxAccessKey,
-                htxSecretKey: htxSecretKey,
+                applicationId: applicationId,
+                apiAccessKey: apiAccessKey,
+                apiSecretKey: apiSecretKey,
+                apiPassword: apiPassword,
             }),
         });
 
         const data = await response.json();
 
-        console.log("data.result========", data.result);
+        //console.log("data.result========", data.result);
+        /*
+        {
+            "status": "ok",
+            "tradingAccountBalance": {
+                "balance": "0.9994902144753992",
+                "timestamp": 1734850234810
+            }
+        }
+        */
+        
 
         if (data.result?.status === "ok") {
 
+            /*
             setHtxAssetValuation(
                 data.result?.assetValuation
             );
+            */
+
+            //setTradingAccountBalance(data.result?.tradingAccountBalance);
+
+            // update myAgent trading account balance
+
+            setMyAgent({
+                ...myAgent,
+                tradingAccountBalance: data.result?.tradingAccountBalance,
+            });
+
+
 
             toast.success("OKX 자산 가치가 확인되었습니다.");
         } else {
             toast.error("OKX 자산 가치를 확인할 수 없습니다.");
         }
 
-        setCheckingHtxAssetValuation(false);
+        SetCheckingTradingAccountBalance(false);
 
     };
 
@@ -1684,7 +1736,7 @@ export default function AIPage({ params }: any) {
 
         const data = await response.json();
 
-        console.log("data.result====", data.result);
+        ///console.log("data.result====", data.result);
 
         if (data.result?.status === "ok") {
 
@@ -1771,7 +1823,7 @@ export default function AIPage({ params }: any) {
 
         const data = await response.json();
 
-        console.log("data.result====", data.result);
+        ///console.log("data.result====", data.result);
 
         if (data.result?.status === "ok") {
 
@@ -1810,7 +1862,7 @@ export default function AIPage({ params }: any) {
         const data = await response?.json();
 
 
-        console.log("checkNicknameIsDuplicate data", data);
+        //console.log("checkNicknameIsDuplicate data", data);
 
         if (data.result) {
             setIsNicknameDuplicate(true);
@@ -2227,7 +2279,7 @@ export default function AIPage({ params }: any) {
                                     }}
                                     theme={"light"}
                                     connectButton={{
-                                        label: "Sign in with AGENT Wallet",
+                                        label: "Sign in with Wallet",
                                     }}
                                     connectModal={{
                                         size: "wide", 
@@ -2735,9 +2787,9 @@ export default function AIPage({ params }: any) {
 
                                             <div className='flex flex-col gap-2'>
                                                 
-                                                <div className='flex flex-row items-center justify-between gap-2'>
+                                            <div className='flex flex-row items-center justify-between gap-2'>
                                                     <span className='text-sm font-semibold text-gray-500'>
-                                                        OKX UID: {myAgent.htxUid}
+                                                        OKX UID: {myAgent?.okxUid}
                                                     </span>
                                                     <Image
                                                         src="/verified.png"
@@ -2784,17 +2836,32 @@ export default function AIPage({ params }: any) {
                                                     />
                                                 </div>
 
-                                                <div className='hidden flex-row items-center justify-between gap-2'>
+                                                {/* KYC Level */}
+                                                {/* myAgent.accountConfig.data.kycLv */}
+                                                <div className='flex flex-row items-center justify-between gap-2'>
                                                     <span className='text-sm font-semibold text-gray-500'>
-                                                        OKX USDT(TRON) 지갑주소: {myAgent.htxUsdtWalletAddress.substring(0, 10) + "..."}
+                                                        KYC Level: {myAgent?.accountConfig?.data?.kycLv}
                                                     </span>
-                                                    <Image
-                                                        src="/verified.png"
-                                                        alt="verified"
-                                                        width={20}
-                                                        height={20}
-                                                    />
+
+                                                    {myAgent?.accountConfig?.data?.kycLv < 2 ? (
+                                                        <div className='flex flex-row items-center gap-2'>
+                                                            <span className='text-sm font-semibold text-red-500'>
+                                                                KYC 레벨이 낮습니다.
+                                                            </span>
+                                                        </div>
+
+                                                    ) : (
+                                                        <Image
+                                                            src="/verified.png"
+                                                            alt="verified"
+                                                            width={20}
+                                                            height={20}
+                                                        />
+                                                    )}
                                                 </div>
+
+
+
 
                                                 <span className='text-sm font-semibold text-gray-500'>
                                                     닉네임: {myAgent.userName}
@@ -2809,41 +2876,50 @@ export default function AIPage({ params }: any) {
                                             </div>
 
 
-                                            {/* checkHtxAssetValuation */}
+                                            {/* checkTradingAccountBalance */}
                                             <div className='flex flex-col gap-2'>
                                                 
                                                 <div className='flex flex-row items-center gap-2'>
                                                     <button
                                                         disabled={
-                                                            !myAgent?.apiAccessKey || !myAgent?.apiSecretKey || checkingHtxAssetValuation
+                                                            !myAgent?.apiAccessKey || !myAgent?.apiSecretKey || !myAgent?.apiPassword || checkingTradingAccountBalance
                                                         }
                                                         className={`
-                                                            ${!myAgent?.apiAccessKey || !myAgent?.apiSecretKey || checkingHtxAssetValuation ? 'bg-gray-300 text-gray-500' : 'bg-blue-500 text-zinc-100'} p-2 rounded text-lg font-semibold
+                                                            ${!myAgent?.apiAccessKey || !myAgent?.apiSecretKey || !myAgent?.apiPassword || checkingTradingAccountBalance ? 'bg-gray-300 text-gray-500' : 'bg-blue-500 text-zinc-100'} p-2 rounded text-lg font-semibold
                                                         `}
                                                         onClick={() => {
-                                                            checkHtxAssetValuation(myAgent.apiAccessKey, myAgent.apiSecretKey);
+                                                            checkTradingAccountBalance(
+                                                                myAgent.id,
+                                                                myAgent.apiAccessKey,
+                                                                myAgent.apiSecretKey,
+                                                                myAgent.apiPassword
+                                                            );
                                                         }}
                                                     >
                                                         OKX 자산 가치 확인
                                                     </button>
-                                                    {checkingHtxAssetValuation && (
+                                                    {checkingTradingAccountBalance && (
                                                         <span className='text-sm font-semibold text-blue-500'>
                                                             OKX 자산 가치 확인중...
                                                         </span>
                                                     )}
                                                 </div>
-                                                {htxAssetValuation?.balance && (
+                                                
                                                     <div className='flex flex-col gap-2'>
                                                         <span className='text-sm font-semibold text-gray-500'>
-                                                            OKX 자산 가치: {htxAssetValuation?.balance} USDT
+                                                            OKX 자산 가치: {
+                                                            //tradingAccountBalance?.balance && Number(tradingAccountBalance?.balance).toFixed(2)
+
+                                                            myAgent?.tradingAccountBalance?.balance && Number(myAgent?.tradingAccountBalance?.balance).toFixed(2)
+                                                        } USD
                                                         </span>
                                                         {/* timestamp */}
                                                         <span className='text-sm font-semibold text-gray-500'>
-                                                            {new Date(htxAssetValuation?.timestamp).toLocaleString()}
+                                                            {/*new Date(tradingAccountBalance?.timestamp).toLocaleString()*/}
+                                                            {new Date(myAgent?.tradingAccountBalance?.timestamp).toLocaleString()}
                                                         </span>
                                                     </div>
-                                                )}
-                                            
+                                                
 
                                             </div>
 
@@ -3041,8 +3117,7 @@ export default function AIPage({ params }: any) {
                                                                     name="agent"
                                                                     checked={agent.erc721ContractAddress === agentBot}
                                                                     onChange={(e) => {
-                                                                        console.log(e.target.value);
-
+                                                       
                                                                         //setAgentBot(e.target.value);
                                                                         changeAgentBot(e.target.value);
 
@@ -3237,10 +3312,14 @@ export default function AIPage({ params }: any) {
                                             {/* button for api call /api/agent/getAccount */}
                                             <button
                                                 disabled={!address || checkingHtxApiKey || !apiAccessKey || !apiSecretKey || !apiPassword || isValidAPIKey}
-                                                className={` ${checkingHtxApiKey || !apiAccessKey || !apiSecretKey || isValidAPIKey
+                                                className={` ${checkingHtxApiKey || !apiAccessKey || !apiSecretKey || !apiPassword || isValidAPIKey
                                                     ? 'bg-gray-300 text-gray-500' : 'bg-blue-500 text-zinc-100'} p-2 rounded text-lg font-semibold`}
                                                 onClick={() => {
-                                                    checkHtxApiKey(apiAccessKey, apiSecretKey);
+                                                    checkOkxApiKey(
+                                                        apiAccessKey,
+                                                        apiSecretKey,
+                                                        apiPassword,
+                                                    );
                                                 }}
                                             >
                                                 OKX API 정보 확인하기
@@ -3283,8 +3362,8 @@ export default function AIPage({ params }: any) {
                                             </span>
                                             <input
                                                 disabled={true}
-                                                value={htxUserId}
-                                                onChange={(e) => setHtxUserId(e.target.value)}
+                                                value={okxUid}
+                                                onChange={(e) => setOkxUid(e.target.value)}
                                                 type="text"
                                                 placeholder="OKX UserId"
                                                 className="w-full p-2 rounded-lg border border-gray-300"
@@ -3427,7 +3506,10 @@ export default function AIPage({ params }: any) {
 
 
 
+
                     </div>
+
+                 
 
 
                     {/* 제목: 업그레이드 */}
@@ -3637,7 +3719,7 @@ export default function AIPage({ params }: any) {
                                     <span className='text-sm font-semibold text-gray-500'>
                                         입금할 계좌
                                     </span>
-                                    {center === "exms_orry_bot" ? (
+                                    {center === "ppump_orry_bot" ? (
                                     <span className='text-sm font-semibold text-gray-500'>
                                         KB국민은행 342301-04-169235 (주)프로젝트오리진
                                     </span>
@@ -3711,7 +3793,7 @@ export default function AIPage({ params }: any) {
                                         {masterBot?.price.toLocaleString()} 원(vat 포함)
                                     </span>
                                     <span className='text-sm font-semibold text-gray-500'>
-                                        {center === "exms_orry_bot" ? (
+                                        {center === "ppump_orry_bot" ? (
                                         "KB국민은행 342301-04-169235 (주)프로젝트오리진"
                                         ) : (
                                         "NH 농협은행 301-0357-6583-41 온리윈 주식회사"
@@ -3917,7 +3999,7 @@ function Header(
                     className="rounded-full w-10 h-10 xl:w-14 xl:h-14"
                     />
                     <span className="text-lg xl:text-3xl text-gray-800 font-semibold">
-                    AGENT
+                    EXMS
                     </span>
                 </div>
             </button>

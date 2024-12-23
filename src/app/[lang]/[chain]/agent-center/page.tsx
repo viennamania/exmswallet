@@ -599,6 +599,7 @@ export default function AIPage({ params }: any) {
 
 
 
+    const [totalTradingAccountBalance, setTotalTradingAccountBalance] = useState(0);
 
     // get all applications
     const [isAdmin, setIsAdmin] = useState(false);
@@ -631,6 +632,8 @@ export default function AIPage({ params }: any) {
 
 
             setApplications(data.result.applications);
+
+            setTotalTradingAccountBalance( data.result.totalTradingAccountBalance );
 
             setLoadingApplications(false);
 
@@ -898,6 +901,7 @@ export default function AIPage({ params }: any) {
                     applicationId: item.id,
                     apiAccessKey: item.apiAccessKey,
                     apiSecretKey: item.apiSecretKey,
+                    apiPassword: item.apiPassword,
                 };
             })
         );
@@ -910,6 +914,7 @@ export default function AIPage({ params }: any) {
         applicationId: number,
         apiAccessKey: string,
         apiSecretKey: string,
+        apiPassword: string,
     ) => {
 
         if (!apiAccessKey) {
@@ -919,6 +924,11 @@ export default function AIPage({ params }: any) {
 
         if (!apiSecretKey) {
             toast.error("API Secret Key를 입력해 주세요.");
+            return;
+        }
+
+        if (!apiPassword) {
+            toast.error("API Password를 입력해 주세요.");
             return;
         }
 
@@ -940,30 +950,19 @@ export default function AIPage({ params }: any) {
             }
         ));
 
-        /*
-        // api getAccount
-        const response = await fetch("/api/agent/getAccountAndUpdateApplication", {
+
+       // api updateUID
+       const response = await fetch("/api/okx/updateUID", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 applicationId: applicationId,
-                htxAccessKey: apiAccessKey,
-                htxSecretKey: apiSecretKey,
-            }),
-        });
-        */
-       // api updateHtxUID
-       const response = await fetch("/api/agent/updateHtxUID", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                applicationId: applicationId,
-                htxAccessKey: apiAccessKey,
-                htxSecretKey: apiSecretKey,
+                apiAccessKey: apiAccessKey,
+                apiSecretKey: apiSecretKey,
+                apiPassword: apiPassword,
+
             }),
         });
 
@@ -977,8 +976,15 @@ export default function AIPage({ params }: any) {
         //console.log("updateHtxUID data", data);
 
         if (data.result?.status === "ok") {
-            toast.success("API Access Key가 확인되었습니다.");
 
+            if (data.result?.okxUid === "0") {
+                toast.error("API Access Key를 확인할 수 없습니다.");
+            } else {
+
+                toast.success("API Access Key가 확인되었습니다.");
+            }
+
+            //console.log("data.result", data.result);
 
             // update application
             setApplications(
@@ -986,7 +992,8 @@ export default function AIPage({ params }: any) {
                     if (item.id === applicationId) {
                         return {
                             ...item,
-                            htxUid: data.result?.htxUid,
+                            okxUid: data.result?.okxUid,
+                            accountConfig: data.result?.accountConfig,
                         }
                     } else {
                         return item;
@@ -994,10 +1001,10 @@ export default function AIPage({ params }: any) {
                 })
             );
 
-
         } else {
             toast.error("API Access Key를 확인할 수 없습니다.");
         }
+        
 
         setCheckingApiAccessKeyList(
             checkingApiAccessKeyList.map((item) => {
@@ -1019,10 +1026,148 @@ export default function AIPage({ params }: any) {
 
 
 
-    //console.log("applications=====", applications);
 
 
-    // check htx asset valuation for each applicationId
+
+
+
+
+
+
+
+
+
+
+
+
+    // check tradingAccountBalance for each application
+    const [checkingTradingAccountBalanceList, setCheckingTradingAccountBalanceList] = useState([] as any[]);
+    const [tradingAccountBalanceList, setTradingAccountBalanceList] = useState([] as any[]);
+
+    useEffect(() => {
+        setCheckingTradingAccountBalanceList(
+            applications.map((item) => {
+                return {
+                    applicationId: item.id,
+                    checking: false,
+                }
+            })
+        );
+
+        setTradingAccountBalanceList(
+            applications.map((item) => {
+                return {
+                    applicationId: item.id,
+                    tradingAccountBalance: item.tradingAccountBalance,
+                };
+            })
+        );
+    } , [applications]);
+
+    const checkTradingAccountBalance = async (
+        applicationId: number,
+        apiAccessKey: string,
+        apiSecretKey: string,
+        apiPassword: string,
+    ) => {
+
+        if (!apiAccessKey) {
+            toast.error("API Access Key를 입력해 주세요.");
+            return;
+        }
+
+        if (!apiSecretKey) {
+            toast.error("API Secret Key를 입력해 주세요.");
+            return;
+        }
+
+        if (!apiPassword) {
+            toast.error("API Password를 입력해 주세요.");
+            return;
+        }
+
+        if (!applicationId) {
+            toast.error("신청 ID를 입력해 주세요.");
+            return;
+        }
+
+        setCheckingTradingAccountBalanceList(
+            checkingTradingAccountBalanceList.map((item) => {
+                if (item.applicationId === applicationId) {
+                    return {
+                        applicationId: applicationId,
+                        checking: true,
+                    }
+                } else {
+                    return item;
+                }
+            }
+        ));
+
+        const response = await fetch("/api/okx/getTradingAccountBalance", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                apiAccessKey: apiAccessKey,
+                apiSecretKey: apiSecretKey,
+                apiPassword: apiPassword,
+                applicationId: applicationId,
+            }),
+        });
+
+        const data = await response.json();
+
+        console.log("data.result", data.result);
+
+        if (data.result?.status === "ok") {
+
+            setTradingAccountBalanceList(
+                tradingAccountBalanceList.map((item) => {
+                    if (item.applicationId === applicationId) {
+                        return {
+                            applicationId: applicationId,
+                            tradingAccountBalance: data.result?.tradingAccountBalance,
+                        }
+                    } else {
+                        return item;
+                    }
+                })
+            );
+
+            toast.success("거래 계정 잔고가 확인되었습니다.");
+        } else {
+            toast.error("거래 계정 잔고를 확인할 수 없습니다.");
+        }
+
+        setCheckingTradingAccountBalanceList(
+            checkingTradingAccountBalanceList.map((item) => {
+                if (item.applicationId === applicationId) {
+                    return {
+                        applicationId: applicationId,
+                        checking: false,
+                    }
+                } else {
+                    return item;
+                }
+            }
+        ));
+
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+    // check htx asset valuation for each htxUid
     const [checkingHtxAssetValuationForAgent, setCheckingHtxAssetValuationForAgent] = useState([] as any[]);
     const [htxAssetValuationForAgent, setHtxAssetValuationForAgent] = useState([] as any[]);
 
@@ -1046,20 +1191,25 @@ export default function AIPage({ params }: any) {
         );
     } , [applications]);
 
-    const checkHtxAssetValuation = async (
+    const checkOkxAssetValuation = async (
         applicationId: number,
-
-        htxAccessKey: string,
-        htxSecretKey: string,
+        okxAccessKey: string,
+        okxSecretKey: string,
+        okxPassword: string,
     ) => {
 
-        if (!htxAccessKey) {
-            toast.error("OKX Access Key를 입력해 주세요.");
+        if (!okxAccessKey) {
+            toast.error("OKXAccess Key를 입력해 주세요.");
             return;
         }
 
-        if (!htxSecretKey) {
-            toast.error("OKX Secret Key를 입력해 주세요.");
+        if (!okxSecretKey) {
+            toast.error("OKXSecret Key를 입력해 주세요.");
+            return;
+        }
+
+        if (!okxPassword) {
+            toast.error("OKXPassword를 입력해 주세요.");
             return;
         }
 
@@ -1082,14 +1232,15 @@ export default function AIPage({ params }: any) {
         ));
 
 
-        const response = await fetch("/api/agent/getAssetValuation", {
+        const response = await fetch("/api/okx/getAssetValuation", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                htxAccessKey: htxAccessKey,
-                htxSecretKey: htxSecretKey,
+                apiAccessKey: okxAccessKey,
+                apiSecretKey: okxSecretKey,
+                apiPassword: okxPassword,
                 applicationId: applicationId,
             }),
         });
@@ -1116,9 +1267,9 @@ export default function AIPage({ params }: any) {
                 })
             );
 
-            toast.success("OKX 자산 가치가 확인되었습니다.");
+            toast.success("OKX자산 가치가 확인되었습니다.");
         } else {
-            toast.error("OKX 자산 가치를 확인할 수 없습니다.");
+            toast.error("OKX자산 가치를 확인할 수 없습니다.");
         }
 
         setCheckingHtxAssetValuationForAgent(
@@ -1135,6 +1286,8 @@ export default function AIPage({ params }: any) {
         ));
 
     };
+
+
 
 
 
@@ -2106,27 +2259,6 @@ export default function AIPage({ params }: any) {
                                     </button>
                                 </div>
 
-                                {address && userType === "telegram" && (
-                                    <button
-                                        onClick={() => {
-                                            window.open("https://t.me/exms_bot", "_blank");
-                                        }}
-                                        className="p-2 bg-zinc-800 text-white rounded"
-                                        >
-                                        <div className="flex flex-row gap-2 items-center">
-                                            <Image
-                                            src="/logo-telegram.webp"
-                                            alt="Telegram"
-                                            width={50}
-                                            height={50}
-                                            className="rounded-lg w-10 h-10"
-                                            />
-                                            <span>Go to Telegram</span>
-                                        </div>
-                                    </button>
-                                )}
-
-
 
 
 
@@ -2252,6 +2384,7 @@ export default function AIPage({ params }: any) {
 
                             <div className='w-full flex flex-col gap-5'>
 
+
                                 {address && !loadingApplications && applications.length === 0 ? (
                                     <div className='w-full flex flex-col items-center justify-center gap-2'>
                                         <span className='text-lg text-gray-800'>
@@ -2264,15 +2397,50 @@ export default function AIPage({ params }: any) {
                                             총 {applications.length}개의 신청이 있습니다.
                                         </span>
 
-                                        {/* startTrading is exist count */}
-                                        <span className='text-lg text-gray-800'>
-                                            시작된 Bot: {applications.filter((item) => item.startTrading).length}개
-                                        </span>
-
-
                                     </div>
 
                                 )}
+
+
+
+
+                                {/* goto copy trading account */}
+                                {/* https://www.okx.com/copy-trading/account/BA5BC36A6EDAB9E1 */}
+                                <div className='w-full flex flex-col gap-2'>
+                                    <span className='text-lg text-gray-800'>
+                                        <a
+                                            href="https://www.okx.com/copy-trading/account/BA5BC36A6EDAB9E1"
+                                            target="_blank"
+                                            className='text-blue-500'
+                                        >
+                                            Copy Trading Account 바로가기
+                                        </a>
+                                    </span>
+                                </div>
+
+
+                                {/* totalTradingAccountBalance */}
+                                {totalTradingAccountBalance > 0 && (
+                                    <div className='w-full flex flex-row gap-2'>
+                                        {/* startTrading is exist count */}
+                                        <span className='text-2xl text-gray-800 font-semibold'>
+                                            시작된 Bot: {
+                                                applications.filter((item) => item.accountConfig?.data.roleType === "2").length
+                                            }개
+                                        </span>
+                                        {' '}/{' '}
+                                        <span className='text-2xl font-semibold text-gray-800'>
+                                            총 거래 계정 잔고: {
+                                            Number(totalTradingAccountBalance).toLocaleString('en-US', {
+                                                style: 'currency',
+                                                currency: 'USD'
+                                            })
+                                            }
+                                        </span>
+                                    </div>
+                                )}
+
+
 
 
                                 <div className='w-full grid grid-cols-1 xl:grid-cols-3 gap-5'>
@@ -2280,23 +2448,41 @@ export default function AIPage({ params }: any) {
                                     {address && !loadingApplications && applications.map((application) => (
                                         <div
                                             key={application._id}
-                                            className='w-full flex flex-col gap-5
+                                            className={`w-full flex flex-col gap-5
                                             border border-gray-300 p-4 rounded-lg bg-gray-100
-                                        '>
 
-                                            {/* 신청번호, 신청일자 */}
-                                            <div className='w-full flex flex-col items-start justify-between gap-2
+                                            ${application?.accountConfig?.data.roleType === "2" ? "border border-green-500" : ""}
+
+                                            `}
+                                        >
+
+                                           {/* 신청번호, 신청일자 */}
+                                           <div className='w-full flex flex-col items-start justify-between gap-2
                                                 border-b border-gray-300 pb-2
                                             '>
-                                                
-                                                <span className='text-lg font-semibold text-gray-800'>
-                                                    신청번호: #{application.id}
-                                                </span>
+                                                <div className='w-full flex flex-row items-center justify-between gap-2'>
+                                                    <span className='text-lg font-semibold text-gray-800'>
+                                                        신청번호: #{application.id}
+                                                    </span>
+
+                                                    {application?.accountConfig?.data.roleType === "2" && (
+                                                        <Image
+                                                            src="/icon-trading-live.gif"
+                                                            alt="Trading"
+                                                            width={80}
+                                                            height={30}
+                                                        />
+                                                    )}
+
+
+                                                </div>
+                                                {/*
                                                 <span className='text-sm text-gray-800'>
                                                     신청일자: {
                                                         new Date(application.createdAt).toLocaleString()
                                                     }
                                                 </span>  
+                                                */}
 
                                                 {/* time ago */}
                                                 <span className='text-xs text-gray-800'>
@@ -2314,9 +2500,10 @@ export default function AIPage({ params }: any) {
 
                                             </div>
 
+
                                             {/* application?.center */}
                                             <div className='w-full flex flex-row items-center justify-between gap-2'>
-                                                {/* 'https://t.me/exms_bot' */}
+                                                {/* 'https://t.me/' */}
                                                 <button
                                                     onClick={() => {
                                                         window.open('https://t.me/' + application.center, '_blank');
@@ -2346,7 +2533,7 @@ export default function AIPage({ params }: any) {
                                                 border-b border-gray-300 pb-2
                                             '>
 
-                                                <div className='flex flex-col gap-2'>
+                                                <div className='w-full flex flex-col gap-2'>
 
                                                     {/* goto button for detail page */}
                                                     <button
@@ -2437,43 +2624,219 @@ export default function AIPage({ params }: any) {
 
                                             </div>
 
+
                                             <div className='w-full flex flex-row items-center justify-between gap-2'>
                                                 <div className='flex flex-col gap-2'>
                                                     <span className='text-xs text-yellow-800'>
                                                         OKX UID
                                                     </span>
-                                                    <span className='text-sm text-gray-800'>
-                                                        {application.htxUid}
-                                                    </span>
+
+                                                    {
+                                                        application?.okxUid === "0"
+                                                        ? (
+                                                            <span className='text-lg text-red-800 font-semibold'>
+                                                                API Access Key 오류
+                                                            </span>
+                                                        )
+                                                        : (
+                                                            <span className='text-sm text-gray-800'>
+                                                                {application.okxUid}
+                                                            </span>
+                                                        )
+                      
+                                                        
+                                                    }
+
                                                 </div>
 
                                                 {/* checkApiAccessKey */}
-                                                <button
-                                                    onClick={() => {
-                                                        checkApiAccessKey(application.id, application.apiAccessKey, application.apiSecretKey);
-                                                    }}
-                                                    disabled={checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking}
-                                                    className={`${checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "bg-gray-500" : "bg-blue-500"} text-white p-2 rounded-lg
-                                                        hover:bg-blue-600
-                                                    `}
-                                                >
-                                                    {checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "Updating..." : "Update UID"}
-                                                </button>
+                                                {
+                                                (!application.okxUid || application.okxUid === "0") ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            checkApiAccessKey(
+                                                                application.id,
+                                                                application.apiAccessKey,
+                                                                application.apiSecretKey,
+                                                                application.apiPassword,
+                                                            );
+                                                        }}
+                                                        disabled={checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking}
+                                                        className={`${checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "bg-gray-500" : "bg-blue-500"} text-white p-2 rounded-lg
+                                                            hover:bg-blue-600
+                                                        `}
+                                                    >
+                                                        {checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "Updating..." : "Update UID"}
+                                                    </button>
+                                                )
+                                                :
+                                                (
+                                                    <div className='flex flex-col gap-2'>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(application?.okxUid);
+                                                                toast.success("Copied to clipboard");
+                                                            }}
+                                                            className="bg-gray-500 text-white p-2 rounded-lg
+                                                                hover:bg-gray-600
+                                                            "
+                                                        >
+                                                            Copy
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                checkApiAccessKey(
+                                                                    application.id,
+                                                                    application.apiAccessKey,
+                                                                    application.apiSecretKey,
+                                                                    application.apiPassword,
+                                                                );
+                                                            }}
+                                                            disabled={checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking}
+                                                            className={`${checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "bg-gray-500" : "bg-blue-500"} text-white p-2 rounded-lg
+                                                                hover:bg-blue-600
+                                                            `}
+                                                        >
+                                                            {checkingApiAccessKeyList.find((item) => item.applicationId === application.id)?.checking ? "Updating..." : "Update UID"}
+                                                        </button>
 
 
-                                                {/* copy button */}
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(application.htxUid);
-                                                        toast.success("Copied to clipboard");
-                                                    }}
-                                                    className="bg-gray-500 text-white p-2 rounded-lg
-                                                        hover:bg-gray-600
-                                                    "
-                                                >
-                                                    Copy
-                                                </button>
+                                                    </div>
+                                                )}
                                             </div>
+
+
+                                            {/* accountConfig */}
+                                            {application?.accountConfig && (
+                                                <div className='w-full flex flex-col items-start justify-between gap-2'>
+                                                    <div className='flex flex-col gap-2'>
+                                                        <span className='text-xs text-yellow-800'>
+                                                            KYC Level
+                                                        </span>
+                                                        <div className='flex flex-row items-center gap-2'>
+                                                            <span className='text-sm text-gray-800'>
+                                                                {application.accountConfig.data.kycLv}
+                                                            </span>
+                                                            {application.accountConfig.data.kycLv === "0" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    본인 인증 필요
+                                                                </span>
+                                                            ) : (
+                                                                <div className='flex flex-row items-center gap-2'>
+                                                                    <span className='text-lg text-green-800 font-semibold'>
+                                                                        본인 인증 완료
+                                                                    </span>
+                                                                    <Image
+                                                                        src="/verified.png"
+                                                                        alt="Verified"
+                                                                        width={20}
+                                                                        height={20}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* acctLv */}
+                                                    {/*
+                                                    1: Spot mode
+                                                    2: Spot and futures mode
+                                                    3: Multi-currency margin
+                                                    4: Portfolio margin
+                                                    */}
+                                                    <div className='flex flex-col gap-2'>
+                                                        <span className='text-xs text-yellow-800'>
+                                                            Account mode
+                                                        </span>
+                                                        <div className='flex flex-row items-center gap-2'>
+                                                            <span className='text-sm text-gray-800'>
+                                                                {application.accountConfig.data.acctLv}
+                                                            </span>
+                                                            {application.accountConfig.data.acctLv === "1" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Spot mode
+                                                                </span>
+                                                            ) : application.accountConfig.data.acctLv === "2" ? (
+                                                                <div className='flex flex-row items-center gap-2'>
+                                                                    <span className='text-lg text-green-800 font-semibold'>
+                                                                        Spot and futures mode
+                                                                    </span>
+                                                                    <Image
+                                                                        src="/verified.png"
+                                                                        alt="Verified"
+                                                                        width={20}
+                                                                        height={20}
+                                                                    />
+                                                                </div>
+                                                            ) : application.accountConfig.data.acctLv === "3" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Multi-currency margin
+                                                                </span>
+                                                            ) : application.accountConfig.data.acctLv === "4" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Portfolio margin
+                                                                </span>
+                                                            ) : (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Unknown
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/*
+                                                    roleType
+                                                    0: General user
+                                                    1: Leading trader
+                                                    2: Copy trader
+                                                    3: API trader
+                                                    */}
+                                                    <div className='flex flex-col gap-2'>
+                                                        <span className='text-xs text-yellow-800'>
+                                                            Role type
+                                                        </span>
+                                                        <div className='flex flex-row items-center gap-2'>
+                                                            <span className='text-sm text-gray-800'>
+                                                                {application.accountConfig.data.roleType}
+                                                            </span>
+                                                            {application.accountConfig.data.roleType === "0" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    General user
+                                                                </span>
+                                                            ) : application.accountConfig.data.roleType === "1" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Leading trader
+                                                                </span>
+                                                            ) : application.accountConfig.data.roleType === "2" ? (
+                                                                <div className='flex flex-row items-center gap-2'>
+                                                                    <span className='text-lg text-green-800 font-semibold'>
+                                                                        Copy trader
+                                                                    </span>
+                                                                    <Image
+                                                                        src="/verified.png"
+                                                                        alt="Verified"
+                                                                        width={20}
+                                                                        height={20}
+                                                                    />
+                                                                </div>
+                                                            ) : application.accountConfig.data.roleType === "3" ? (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    API trader
+                                                                </span>
+                                                            ) : (
+                                                                <span className='text-lg text-red-800 font-semibold'>
+                                                                    Unknown
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+
+
+
+                                                </div>
+                                            )}
+
 
                                             <div className='w-full flex flex-row items-center justify-between gap-2'>
                                                 <div className='flex flex-col gap-2'>
@@ -2570,7 +2933,7 @@ export default function AIPage({ params }: any) {
                                             </div>
                                             */}
 
-
+                                            
                                             <div className='w-full flex flex-row items-center justify-between gap-2'>
                                                 <div className='flex flex-col gap-2'>
                                                     <span className='text-xs text-yellow-800'>
@@ -2635,12 +2998,52 @@ export default function AIPage({ params }: any) {
                                             */}
 
 
-                                            {/* asset valuation */}
 
+
+                                            {/* tradingAccountBalance */}
                                             <div className='w-full flex flex-row items-center justify-between gap-2'>
                                                 <div className='flex flex-col gap-2'>
                                                     <span className='text-xs text-yellow-800'>
-                                                        OKX 자산 가치(SPOT)
+                                                        OKX Trading Balance
+                                                    </span>
+                                                    <span className='text-sm text-gray-800'>
+                                                        {tradingAccountBalanceList.find((item) => item.applicationId === application.id)?.tradingAccountBalance?.balance} $(USD)
+                                                    </span>
+                                                    {/* convert timestamp to date */}
+                                                    <span className='text-xs text-gray-800'>
+                                                        {tradingAccountBalanceList.find((item) => item.applicationId === application.id)?.tradingAccountBalance?.timestamp
+                                                        ? new Date(tradingAccountBalanceList.find((item) => item.applicationId === application.id)?.tradingAccountBalance?.timestamp).toLocaleString()
+                                                        : ""
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        checkTradingAccountBalance(
+                                                            application.id,
+                                                            application.apiAccessKey,
+                                                            application.apiSecretKey,
+                                                            application.apiPassword,
+                                                        );
+                                                    }}
+                                                    disabled={
+                                                        checkingTradingAccountBalanceList.find((item) => item.applicationId === application.id)?.checking
+                                                    }
+                                                    className={`${checkingTradingAccountBalanceList.find((item) => item.applicationId === application.id)?.checking ? "bg-gray-500" : "bg-blue-500"} text-white p-2 rounded-lg
+                                                        hover:bg-blue-600
+                                                    `}
+                                                >
+                                                    {checkingTradingAccountBalanceList.find((item) => item.applicationId === application.id)?.checking ? "Checking..." : "Check"}
+                                                </button>
+                                            </div>
+
+
+
+                                            {/* asset valuation */}
+                                            <div className='w-full flex flex-row items-center justify-between gap-2'>
+                                                <div className='flex flex-col gap-2'>
+                                                    <span className='text-xs text-yellow-800'>
+                                                        OKX Funding Balance
                                                     </span>
                                                     <span className='text-sm text-gray-800'>
                                                         {htxAssetValuationForAgent.find((item) => item.applicationId === application.id)?.assetValuation?.balance || 0} $(USD)
@@ -2655,10 +3058,11 @@ export default function AIPage({ params }: any) {
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        checkHtxAssetValuation(
+                                                        checkOkxAssetValuation(
                                                             application.id,
                                                             application.apiAccessKey,
                                                             application.apiSecretKey,
+                                                            application.apiPassword,
                                                         );
                                                     }}
                                                     disabled={
@@ -2672,8 +3076,10 @@ export default function AIPage({ params }: any) {
                                                 </button>
                                             </div>
 
-                                      
-                                            {/* getPositionList */}
+
+
+
+                                            {/*
                                             <div className='w-full flex flex-col items-start justify-between gap-2'>
                                                 
                                                 <div className='w-full flex flex-row items-center justify-between gap-2'>
@@ -2700,7 +3106,7 @@ export default function AIPage({ params }: any) {
 
                                                 </div>
 
-                                                {/* timestamp */}
+
                                                 <span className='text-xs text-gray-800'>
                                                     {positionList.find((item) => item.applicationId === application.id)?.timestamp
                                                     ? new Date(positionList.find((item) => item.applicationId === application.id)?.timestamp).toLocaleString()
@@ -2708,7 +3114,6 @@ export default function AIPage({ params }: any) {
                                                     }
                                                 </span>
 
-                                                {/* check status */}
                                                 {positionList.find((item) => item.applicationId === application.id)?.status
                                                 ? (
 
@@ -2800,124 +3205,16 @@ export default function AIPage({ params }: any) {
                                                 ) : (
 
                                                     <span className='text-lg text-red-500 font-semibold'>
-                                                        포지션 리스트가 확인되지 않습니다. 카피트레이딩을 시작해 주세요.
+                                                        
                                                     </span>
 
                                                 )}
 
                                             </div>
+                                            */}
                                             
 
 
-
-
-
-                                            
-
-
-                                                    
-                                            <div className='w-full flex flex-row items-center justify-between gap-2
-                                                border-t border-gray-300 pt-2
-                                            '>
-                                                {application?.startTrading?.status ? (
-                                                    <div className='flex flex-col gap-2'>
-                                                        <span className='text-xs text-yellow-800'>
-                                                            AI 트레이딩 상태
-                                                        </span>
-
-                                                        <div className='flex flex-row items-center gap-2'>
-                                                            <span className='text-sm text-gray-800'>
-                                                                러닝타임:
-                                                            </span>                                            
-                                                            <span className='text-sm text-gray-800'>
-                                                                {
-                                                                    new Date().getTime() - new Date(application?.startTrading?.timestamp).getTime() < 1000 * 60 ? (
-                                                                    ' ' + Math.floor((new Date().getTime() - new Date(application?.startTrading?.timestamp).getTime()) / 1000) + ' ' + '초'
-                                                                    ) :
-                                                                    new Date().getTime() - new Date(application?.startTrading?.timestamp).getTime() < 1000 * 60 * 60 ? (
-                                                                    ' ' + Math.floor((new Date().getTime() - new Date(application?.startTrading?.timestamp).getTime()) / 1000 / 60) + ' ' + '분'
-                                                                    ) : (
-                                                                    ' ' + Math.floor((new Date().getTime() - new Date(application?.startTrading?.timestamp).getTime()) / 1000 / 60 / 60) + ' ' + '시간'
-                                                                    )
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                        <div className='flex flex-row items-center gap-2'>
-                                                            <span className='text-sm text-gray-800'>
-                                                                시작시간:
-                                                            </span>
-                                                            <span className='text-sm text-gray-800'>
-                                                                {application?.startTrading?.timestamp
-                                                                ? new Date(application?.startTrading?.timestamp).toLocaleString()
-                                                                : ""
-                                                                }
-                                                            </span>
-                                                        </div>
-
-                                                        {/* mintMasterBotNft */}
-
-                                                        {application?.masterBotInfo ? (
-
-                                                            <div className='flex flex-col gap-2'>
-                                                                <span className='text-xs text-yellow-800'>
-                                                                    MasterBot NFT
-                                                                </span>
-                                                                <Image
-                                                                    src={application?.masterBotInfo?.imageUrl}
-                                                                    alt="MasterBot NFT"
-                                                                    width={200}
-                                                                    height={200}
-                                                                    className='rounded-lg'
-                                                                />
-                                                            </div>
-
-                                                        ) : (
-
-                                                            <>
-                                                            {/*
-
-                                                            {userMasterBotContractAddress && (
-                                                                
-                                                                <button
-                                                                    onClick={() => {
-                                                                        mintMasterBotNft(application?.id);
-                                                                    }}
-                                                                    disabled={mintingMasterBotNft.find((item) => item.applicationId === application.id)?.minting}
-                                                                    className={`${mintingMasterBotNft.find((item) => item.applicationId === application.id)?.minting ? "bg-gray-500" : "bg-blue-500"} text-white p-2 rounded-lg
-                                                                        hover:bg-blue-600
-                                                                    `}
-                                                                >
-                                                                    {mintingMasterBotNft.find((item) => item.applicationId === application.id)?.minting ? "Minting..." : "Mint MasterBot NFT"}
-                                                                </button>
-                                                                
-                                                            )}
-                                                            */}
-
-                                                            </>
-                                                        )}
-
-                                                    </div>
-                                                ) : (
-                                                    <div className='flex flex-col gap-2'>
-                                                        <span className='text-xs text-yellow-800'>
-                                                            AI 트레이딩 상태
-                                                        </span>
-                                                        <span className='text-sm text-gray-800'>
-                                                            준비중...
-                                                        </span>
-                                                    </div>
-                                                )}
-    
-                                                {/*
-                                                <button
-                                                    className="bg-blue-500 text-white p-2 rounded-lg
-                                                        hover:bg-blue-600
-                                                    "
-                                                >
-                                                    승인하기
-                                                </button>
-                                                */}
-                                            </div>
                 
                                         </div>
                                     ))}
@@ -2987,7 +3284,7 @@ function Header(
                     className="rounded-full w-10 h-10 xl:w-14 xl:h-14"
                     />
                     <span className="text-lg xl:text-3xl text-gray-800 font-semibold">
-                    AI Agent Center
+                    EXMS AI Agent Center
                     </span>
                 </div>
                 
